@@ -19,16 +19,23 @@
 
 	<bean id="mySessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="myDataSource" />
-		<property name="configLocation" value="classpath:hibernate.cfg.xml" />
+        <property name="packagesToScan" value="me.xiaoge.model"/>
+        <property name="configLocation" value="classpath:hibernate.cfg.xml"/>
 		<property name="namingStrategy" ref="namingStrategy" />
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.show_sql">true</prop>
-				<prop key="hibernate.hbm2ddl.auto">create</prop>
+				<prop key="hibernate.hbm2ddl.auto">create-drop</prop>
 				<prop key="hibernate.dialect">${db.dialect}</prop>
 			</props>
 		</property>
 	</bean>
+
+    <bean id="rhoEventLoggerBean" class="me.xiaoge.prelog.RhoEventLoggerBean">
+        <property name="logFilePath" value="d:\\rho-log.txt"></property>
+        <property name="runtimeService" ref="runtimeService"></property>
+        <property name="processEngineConfiguration" ref="processEngineConfiguration"></property>
+    </bean>
 
 	<tx:annotation-driven />
 
@@ -43,7 +50,7 @@
 
     <property name="dataSource" ref="myDataSource" />
     <property name="transactionManager" ref="transactionManager" />
-    <property name="databaseSchemaUpdate" value="true" />
+    <property name="databaseSchemaUpdate" value="create-drop" />
     <property name="jobExecutorActivate" value="false" />
 
     <!-- 自动部署 -->
@@ -55,7 +62,7 @@
     </bean>
 
     <bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
-    <property name="processEngineConfiguration" ref="processEngineConfiguration"/>
+        <property name="processEngineConfiguration" ref="processEngineConfiguration"/>
     </bean>
 
     <bean id="repositoryService" factory-bean="processEngine" factory-method="getRepositoryService"/>
