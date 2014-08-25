@@ -4,6 +4,8 @@
 	"http://www.jboss.org/dtd/hibernate/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
 	<session-factory>
-		<mapping class="me.xiaoge.prelog.RhoEventLoggerEntity"></mapping>
-	</session-factory>
+		<mapping class="me.xiaoge.prelog.RhoEventInternalEntity"></mapping>
+        <mapping class="me.xiaoge.prelog.RhoEventLogEntity"></mapping>
+        <mapping class="me.xiaoge.prelog.RhoEventCaseEntity"></mapping>
+    </session-factory>
 </hibernate-configuration>

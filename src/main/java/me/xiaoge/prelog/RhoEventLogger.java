@@ -5,27 +5,21 @@ import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.delegate.event.*;
+import org.activiti.engine.delegate.event.impl.ActivitiActivityEventImpl;
 import org.activiti.engine.impl.ProcessEngineImpl;
-import org.activiti.engine.impl.context.Context;
-import org.activiti.engine.impl.event.logger.DatabaseEventFlusher;
 import org.activiti.engine.impl.event.logger.EventFlusher;
-import org.activiti.engine.impl.event.logger.handler.EventLoggerEventHandler;
-import org.activiti.engine.impl.event.logger.handler.ProcessInstanceEndedEventHandler;
-import org.activiti.engine.impl.event.logger.handler.ProcessInstanceStartedEventHandler;
-import org.activiti.engine.impl.interceptor.CommandContext;
-import org.activiti.engine.impl.interceptor.CommandContextCloseListener;
-import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
+import org.activiti.engine.impl.pvm.PvmActivity;
+import org.activiti.engine.impl.pvm.PvmTransition;
+import org.hibernate.SessionFactory;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
-import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.runtime.Clock;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 /**
  * @author Joram Barrez
@@ -40,6 +34,11 @@ public class RhoEventLogger implements ActivitiEventListener {
     private static void println(int n) {
         System.out.println(n);
     }
+    private static void println(String[] strArr) {
+        for(String s: strArr) {
+            println(s);
+        }
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(RhoEventLogger.class);
 
@@ -51,52 +50,172 @@ public class RhoEventLogger implements ActivitiEventListener {
     protected List<RhoEventLoggerListener> listeners;
 
 
-    private static RepositoryService repositoryService = null;
-    private static RuntimeService runtimeService = null;
-    private static ProcessDefinitionEntity processDefinition = null;
-    private static String processDefId = "";
+    protected static HashMap<String, HashMap<String, String[]>> processPreTaskCache = new HashMap<>();
 
+    private RepositoryService repositoryService = null;
+    private RuntimeService runtimeService = null;
+    private ProcessDefinitionEntity processDefinition = null;
+    private String processDefId = "";
+    private RhoEventInternalDAO rhoEventInternalDAO;
+    private RhoEventCaseDAO rhoEventCaseDAO;
+    private RhoEventLogDAO rhoEventLogDAO;
 
     public RhoEventLogger(Clock clock) {
         this.clock = clock;
         this.objectMapper = new ObjectMapper();
     }
 
-    public RhoEventLogger(Clock clock, String logFilePath) {
+    public RhoEventLogger(Clock clock, SessionFactory sessionFactory, String logFilePath) {
         this(clock);
         this.logFilePath = logFilePath;
+        this.rhoEventInternalDAO = new RhoEventInternalDAOImpl(sessionFactory);
+        this.rhoEventCaseDAO = new RhoEventCaseDAOImpl(sessionFactory);
+        this.rhoEventLogDAO = new RhoEventLogDAOImpl(sessionFactory);
+
+    }
+
+
+    private static void getActivityPreTasks(List<PvmTransition> pvmTransitionList, List<String> preTaskList) {
+        for(PvmTransition pvmTransition:pvmTransitionList) {
+            PvmActivity pvmActivity = pvmTransition.getSource();
+            String actType = (String)pvmActivity.getProperty("type");
+            if(actType.endsWith("Task")) {
+                //userTask, seriviceTask, ...
+                preTaskList.add(pvmActivity.getId());
+            } else if(actType.endsWith("Gateway")) {
+                //gateway
+                getActivityPreTasks(pvmActivity.getIncomingTransitions(), preTaskList);
+            }
+        }
+    }
+
+    private synchronized static String[] getCacheSortedPreTasks(String processDefId, ActivityImpl ai) {
+        HashMap<String, String[]> tm;
+        if(!processPreTaskCache.containsKey(processDefId)) {
+            tm = new HashMap<>();
+            processPreTaskCache.put(processDefId, tm);
+        } else {
+            tm = processPreTaskCache.get(processDefId);
+        }
+
+        String taskDefId = ai.getId();
+        String[] preTaskList;
+        if(!tm.containsKey(taskDefId)) {
+            List<String> tmpPreTaskList = new ArrayList<>();
+            getActivityPreTasks(ai.getIncomingTransitions(), tmpPreTaskList);
+            preTaskList = new String[tmpPreTaskList.size()];
+            tmpPreTaskList.toArray(preTaskList);
+//            println("---pre task : " + taskDefId + " ---");
+//            println(preTaskList);
+
+            tm.put(taskDefId, preTaskList);
+        } else {
+            preTaskList = tm.get(taskDefId);
+        }
+        return preTaskList;
     }
 
     @Override
     public void onEvent(ActivitiEvent event) {
 
-        if(!event.getType().equals(ActivitiEventType.TASK_COMPLETED)) {
+        if(!(event instanceof ActivitiActivityEventImpl)) {
+           return;
+        }
+        ActivitiActivityEventImpl activitiActivityEvent = (ActivitiActivityEventImpl) event;
+        String activityType = activitiActivityEvent.getActivityType();
+        Boolean endProcessInstance = false;
+        if(activityType.equals("endEvent")) {
+            endProcessInstance = true;
+        } else if(!(activityType.equals("userTask")
+                || activityType.equals("scriptTask")
+                || activityType.equals("mailTask")
+                || activityType.equals("serviceTask")
+                || activityType.equals("receiveTask")
+                || activityType.equals("businessRuleTask")
+        )) {
             return;
         }
 
+        ActivitiEventType eventType = activitiActivityEvent.getType();
+
+        if(!eventType.equals(ActivitiEventType.ACTIVITY_COMPLETED)) {
+            return;
+        }
+
+
+
+        try{
+            if(endProcessInstance) {
+                /**
+                 * 如果processInstance已经结束，则删除中间表里面的数据，以节省空间。
+                 */
+                rhoEventInternalDAO.deleteByProcessInstanceId(activitiActivityEvent.getProcessInstanceId());
+            } else {
+                dealEvent(activitiActivityEvent);
+            }
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+        }
+
+    }
+
+    protected void dealEvent(ActivitiActivityEvent activitiActivityEvent) {
+        String processInstanceId = activitiActivityEvent.getProcessInstanceId();
+
         if(repositoryService == null) {
-            println("init service");
+//            println("init service");
             ProcessEngineImpl processEngine =(ProcessEngineImpl) ProcessEngines.getDefaultProcessEngine();
             repositoryService = processEngine.getRepositoryService();
             runtimeService  = processEngine.getRuntimeService();
         }
-
-        ActivitiEntityWithVariablesEvent eventWithVariables = (ActivitiEntityWithVariablesEvent) event;
-        TaskEntity task = (TaskEntity) eventWithVariables.getEntity();
-//        Map<String, Object> data = handleCommonTaskFields(task);
-        println("complete: " + task.getId());
-
-        if(!task.getProcessDefinitionId().equals(processDefId)) {
-            processDefId = task.getProcessDefinitionId();
+        if(!activitiActivityEvent.getProcessDefinitionId().equals(processDefId)) {
+            processDefId = activitiActivityEvent.getProcessDefinitionId();
             processDefinition =(ProcessDefinitionEntity) repositoryService.getProcessDefinition(processDefId);
-            println("get def: " + processDefId);
+//            println("get def: " + processDefId);
         }
-        ActivityImpl ai = processDefinition.findActivity(task.getTaskDefinitionKey());
 
-        println("acti impl：" + ai.getId());
+        ActivityImpl ai = processDefinition.findActivity(activitiActivityEvent.getActivityId());
 
+//        println("acti impl：" + ai.getId());
+        /*
+         * 取到已经排序的preTaskList
+         */
+        String[] preTaskList = getCacheSortedPreTasks(processDefId, ai);
+        List<String> actualPreTaskList = new ArrayList<>();
+
+        if(preTaskList.length> 0) {
+            List<RhoEventInternalEntity> rhoEventInternalList = rhoEventInternalDAO.findByP(processInstanceId, preTaskList);
+            for (RhoEventInternalEntity re:rhoEventInternalList) {
+                actualPreTaskList.add(re.getTaskName());
+            }
+        }
+
+        RhoEventCaseEntity rhoEventCaseEntity = rhoEventCaseDAO.getByProcessInstanceId(processInstanceId);
+        if(rhoEventCaseEntity == null) {
+            rhoEventCaseEntity = new RhoEventCaseEntity();
+            rhoEventCaseEntity.setProcesssInstanceId(processInstanceId);
+            rhoEventCaseDAO.save(rhoEventCaseEntity);
+//            println("new case: " + processInstanceId + ", " + rhoEventCaseEntity.getId());
+        }
+
+        long caseId = rhoEventCaseEntity.getId();
+//        println("case id: " + caseId);
+        log(caseId, actualPreTaskList, activitiActivityEvent.getActivityName());
+
+        RhoEventInternalEntity curRhoEntity = new RhoEventInternalEntity();
+        curRhoEntity.setProcessInstanceId(processInstanceId);
+        curRhoEntity.setTaskDefId(ai.getId());
+        curRhoEntity.setTaskName(activitiActivityEvent.getActivityName());
+        rhoEventInternalDAO.save(curRhoEntity);
     }
-
+    protected void log(long caseId, List<String> preTaskList, String curTask) {
+        RhoEventLogEntity rhoEventLogEntity = new RhoEventLogEntity();
+        rhoEventLogEntity.setCaseId(caseId);
+        rhoEventLogEntity.setCurTask(curTask);
+        rhoEventLogEntity.setPreTask(StringUtils.join(preTaskList, ","));
+        rhoEventLogDAO.save(rhoEventLogEntity);
+//        println("" + caseId + ": [" + StringUtils.join(preTaskList, ",") + "]" + curTask);
+    }
 
     @Override
     public boolean isFailOnException() {
@@ -110,9 +229,7 @@ public class RhoEventLogger implements ActivitiEventListener {
         listeners.add(listener);
     }
 
-    /**
-     * Subclasses that want something else than the database flusher should override this method
-     */
+
     protected EventFlusher createEventFlusher() {
         return null;
     }

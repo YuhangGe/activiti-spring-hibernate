@@ -4,6 +4,7 @@ import org.activiti.engine.*;
 import org.activiti.engine.event.EventLogEntry;
 import org.activiti.engine.impl.ProcessEngineImpl;
 import org.activiti.engine.task.Task;
+import org.hibernate.SessionFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +18,15 @@ import java.util.List;
  * Created by xiaoge on 2014/8/22.
  */
 public class PreLogTest extends AbstractPreLogTest {
+    @Autowired
+    SessionFactory sessionFactory;
 
     @Test
     public void test1() {
 
         ProcessEngineImpl processEngine = (ProcessEngineImpl) ProcessEngines.getDefaultProcessEngine();
         ProcessEngineConfiguration processEngineConfiguration = processEngine.getProcessEngineConfiguration();
-        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), "d:\\rho-log.txt");
+        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory,  "d:\\rho-log.txt");
         runtimeService.addEventListener(databaseEventLogger);
 
         runtimeService.startProcessInstanceByKey("singleTaskProcess");

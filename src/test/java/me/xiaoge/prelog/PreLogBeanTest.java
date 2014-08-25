@@ -1,13 +1,8 @@
 package me.xiaoge.prelog;
 
-import org.activiti.engine.task.Task;
-import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-
-import java.util.List;
+import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by xiaoge on 2014/8/22.
@@ -16,7 +11,17 @@ public class PreLogBeanTest  extends AbstractPreLogTest {
 
     @Test
     public void test() {
-        runtimeService.startProcessInstanceByKey("autoTaskProcess");
+        Random random = new Random();
+
+        for (int i = 0; i < 10; i++) {
+            int c = random.nextInt(2) + 1;
+            HashMap<String, Object> varMap = new HashMap<>();
+            varMap.put("chooice", c);
+//            print("chooice: " + c);
+            runtimeService.startProcessInstanceByKey("autoTaskProcess", varMap);
+        }
+
+
 //        List<Task> taskList = taskService.createTaskQuery().list();
 //        print(taskList.size());
 //        Assert.assertEquals(taskList.size(), 1);
