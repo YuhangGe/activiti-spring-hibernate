@@ -17,7 +17,7 @@ import org.activiti.engine.runtime.Clock;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.io.*;
 import java.util.*;
 
 
@@ -30,6 +30,7 @@ public class RhoEventLogger implements ActivitiEventListener {
     private static void println(String msg) {
         System.out.println(msg);
     }
+    private static void println(long n) {System.out.println(n);}
 
     private static void println(int n) {
         System.out.println(n);
@@ -44,7 +45,8 @@ public class RhoEventLogger implements ActivitiEventListener {
 
     protected Clock clock;
     protected ObjectMapper objectMapper;
-    protected String logFilePath;
+    protected String logFilePath = "";
+    protected BufferedWriter logFileWriter = null;
 
     // Listeners for new events
     protected List<RhoEventLoggerListener> listeners;
@@ -71,7 +73,6 @@ public class RhoEventLogger implements ActivitiEventListener {
         this.rhoEventInternalDAO = new RhoEventInternalDAOImpl(sessionFactory);
         this.rhoEventCaseDAO = new RhoEventCaseDAOImpl(sessionFactory);
         this.rhoEventLogDAO = new RhoEventLogDAOImpl(sessionFactory);
-
     }
 
 
@@ -145,13 +146,25 @@ public class RhoEventLogger implements ActivitiEventListener {
 
 
         try{
+            String processInstanceId = activitiActivityEvent.getProcessInstanceId();
+            RhoEventCaseEntity rhoEventCaseEntity = rhoEventCaseDAO.getByProcessInstanceId(processInstanceId);
+            if(rhoEventCaseEntity == null) {
+                rhoEventCaseEntity = new RhoEventCaseEntity();
+                rhoEventCaseEntity.setProcesssInstanceId(processInstanceId);
+                rhoEventCaseDAO.save(rhoEventCaseEntity);
+            }
+
+            long caseId = rhoEventCaseEntity.getId();
             if(endProcessInstance) {
                 /**
                  * 如果processInstance已经结束，则删除中间表里面的数据，以节省空间。
                  */
-                rhoEventInternalDAO.deleteByProcessInstanceId(activitiActivityEvent.getProcessInstanceId());
+                rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
+                if(this.logFilePath != null && !this.logFilePath.isEmpty()) {
+                    storeLogToFile(caseId);
+                }
             } else {
-                dealEvent(activitiActivityEvent);
+                dealEvent(activitiActivityEvent, caseId);
             }
         } catch (Exception ex) {
             logger.error(ex.getMessage());
@@ -159,7 +172,32 @@ public class RhoEventLogger implements ActivitiEventListener {
 
     }
 
-    protected void dealEvent(ActivitiActivityEvent activitiActivityEvent) {
+    protected void storeLogToFile(long caseId) throws IOException{
+        if(this.logFileWriter == null) {
+            this.logFileWriter = new BufferedWriter(new FileWriter(this.logFilePath, true));
+        }
+        List<RhoEventLogEntity> rhoEventLogList = rhoEventLogDAO.findByCaseId(caseId);
+//        println(caseId);
+        StringBuilder sb = new StringBuilder();
+        Boolean first = true;
+        for(RhoEventLogEntity r : rhoEventLogList) {
+            if(!first) {
+                sb.append(',');
+            } else {
+                first = false;
+            }
+            sb.append('[').append(r.getPreTask()).append(']').append(r.getCurTask());
+        }
+        sb.append("\r\n");
+        logLine(sb.toString());
+    }
+
+    protected synchronized void logLine(String line) throws IOException{
+        this.logFileWriter.write(line);
+        this.logFileWriter.flush();
+    }
+
+    protected void dealEvent(ActivitiActivityEvent activitiActivityEvent, long caseId) {
         String processInstanceId = activitiActivityEvent.getProcessInstanceId();
 
         if(repositoryService == null) {
@@ -190,15 +228,7 @@ public class RhoEventLogger implements ActivitiEventListener {
             }
         }
 
-        RhoEventCaseEntity rhoEventCaseEntity = rhoEventCaseDAO.getByProcessInstanceId(processInstanceId);
-        if(rhoEventCaseEntity == null) {
-            rhoEventCaseEntity = new RhoEventCaseEntity();
-            rhoEventCaseEntity.setProcesssInstanceId(processInstanceId);
-            rhoEventCaseDAO.save(rhoEventCaseEntity);
-//            println("new case: " + processInstanceId + ", " + rhoEventCaseEntity.getId());
-        }
 
-        long caseId = rhoEventCaseEntity.getId();
 //        println("case id: " + caseId);
         log(caseId, actualPreTaskList, activitiActivityEvent.getActivityName());
 

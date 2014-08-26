@@ -8,7 +8,7 @@ import java.util.List;
 public interface RhoEventLogDAO {
     public RhoEventLogEntity get(long id);
     public List<RhoEventLogEntity> findAll();
-    public List<RhoEventLogEntity> findByCaseId(String caseId);
+    public List<RhoEventLogEntity> findByCaseId(long caseId);
     public void save(RhoEventLogEntity rhoEventLogEntity);
     public void delete(RhoEventLogEntity rhoEventLogEntity);
 

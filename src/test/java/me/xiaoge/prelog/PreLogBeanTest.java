@@ -17,15 +17,9 @@ public class PreLogBeanTest  extends AbstractPreLogTest {
             int c = random.nextInt(2) + 1;
             HashMap<String, Object> varMap = new HashMap<>();
             varMap.put("chooice", c);
-//            print("chooice: " + c);
             runtimeService.startProcessInstanceByKey("autoTaskProcess", varMap);
         }
 
 
-//        List<Task> taskList = taskService.createTaskQuery().list();
-//        print(taskList.size());
-//        Assert.assertEquals(taskList.size(), 1);
-//        print(taskList);
-//        completeTaskList(taskList);
     }
 }

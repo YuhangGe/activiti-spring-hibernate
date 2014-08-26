@@ -10,16 +10,17 @@ import org.springframework.beans.factory.InitializingBean;
  * Created by xiaoge on 2014/8/22.
  */
 public class RhoEventLoggerBean implements InitializingBean{
-    private String logFilePath;
+    private String logFilePath = "";
     private RuntimeService runtimeService;
 
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
 
     private SessionFactory sessionFactory;
 
     private ProcessEngineConfiguration processEngineConfiguration;
+
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     public String getLogFilePath() {
         return logFilePath;

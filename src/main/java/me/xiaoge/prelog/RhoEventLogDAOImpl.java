@@ -33,9 +33,9 @@ public class RhoEventLogDAOImpl implements RhoEventLogDAO {
     }
 
     @Override
-    public List<RhoEventLogEntity> findByCaseId(String caseId) {
+    public List<RhoEventLogEntity> findByCaseId(long caseId) {
         return sessionFactory.getCurrentSession().createQuery(
-                "FROM RhoEventLogEntity WHERE case_id = :cid").setString("cid", caseId)
+                "FROM RhoEventLogEntity WHERE case_id = :cid").setLong("cid", caseId)
                 .list();
     }
 
