@@ -32,7 +32,7 @@
 	</bean>
 
     <bean id="rhoEventLoggerBean" class="me.xiaoge.prelog.RhoEventLoggerBean">
-        <property name="logFilePath" value="d:\\rho-log.txt"></property>
+        <property name="logFilePath" value="rho-log.txt"></property>
         <property name="runtimeService" ref="runtimeService"></property>
         <property name="sessionFactory" ref="mySessionFactory"></property>
         <property name="processEngineConfiguration" ref="processEngineConfiguration"></property>

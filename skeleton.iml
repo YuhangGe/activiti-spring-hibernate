@@ -28,12 +28,12 @@
     <facet type="Spring" name="Spring">
       <configuration>
         <fileset id="fileset" name="Spring Application Context" removed="false">
-          <file>file://$MODULE_DIR$/src/main/resources/spring/security-config.xml</file>
-          <file>file://$MODULE_DIR$/src/main/resources/spring/persistence-config.xml</file>
           <file>file://$MODULE_DIR$/src/main/webapp/WEB-INF/web-security.xml</file>
-          <file>file://$MODULE_DIR$/src/main/webapp/WEB-INF/spring-mvc-servlet.xml</file>
-          <file>file://$MODULE_DIR$/src/main/webapp/WEB-INF/applicationContext.xml</file>
           <file>file://$MODULE_DIR$/src/main/resources/spring/app-config.xml</file>
+          <file>file://$MODULE_DIR$/src/main/webapp/WEB-INF/spring-mvc-servlet.xml</file>
+          <file>file://$MODULE_DIR$/src/main/resources/spring/persistence-config.xml</file>
+          <file>file://$MODULE_DIR$/src/main/resources/spring/security-config.xml</file>
+          <file>file://$MODULE_DIR$/src/main/webapp/WEB-INF/applicationContext.xml</file>
         </fileset>
       </configuration>
     </facet>
@@ -144,11 +144,11 @@
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-databinding-jaxb:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-bindings-xml:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-frontend-simple:2.6.14" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-transports-http:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-ws-addr:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-ws-policy:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: org.apache.neethi:neethi:3.0.3" level="project" />
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.10.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-transports-http:2.6.14" level="project" />
     <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-xjc:2.1.7" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.1" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.1.1" level="project" />

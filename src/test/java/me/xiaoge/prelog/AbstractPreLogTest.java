@@ -3,6 +3,7 @@ package me.xiaoge.prelog;
 import org.activiti.engine.ManagementService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +37,9 @@ public class AbstractPreLogTest  extends AbstractJUnit4SpringContextTests {
             print(taskList.get(i).getName());
         }
     }
-
+    protected static void print(boolean v) {
+        System.out.println(v);
+    }
     protected void completeTaskList(List<Task> taskList) {
         for(Task t : taskList) {
             taskService.complete(t.getId());
