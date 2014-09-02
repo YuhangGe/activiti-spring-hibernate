@@ -1,6 +1,9 @@
 package me.xiaoge.prelog;
 
 import me.xiaoge.prelog.autorun.RhoExpressionCondition;
+import me.xiaoge.prelog.autorun.RhoExpressionExclusiveHolder;
+import me.xiaoge.prelog.autorun.RhoExpressionHolder;
+import me.xiaoge.prelog.autorun.RhoExpressionManager;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.impl.RepositoryServiceImpl;
 import org.activiti.engine.impl.el.UelExpressionCondition;
@@ -25,7 +28,7 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
     RepositoryService repositoryService;
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         String testProcessDefinitionKeyName = "autoTaskProcess";
 
         List<ProcessDefinition> processDefinitionList = repositoryService.createProcessDefinitionQuery().processDefinitionKey(testProcessDefinitionKeyName).list();
@@ -41,15 +44,21 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
 
         print(activityList.size());
 
+        RhoExpressionManager expressionManager = new RhoExpressionManager();
+
         for(ActivityImpl ai : activityList) {
             Map<String, Object> proMap = ai.getProperties();
             if(proMap == null || !proMap.containsKey("type")) {
                 continue;
             }
             String type = (String)proMap.get("type");
-            if(type.equals("exclusiveGateway") || type.equals("")) {
+            if(type.equals("inclusiveGateway")) {
+                throw new Exception("inclusive gateway is not support!");
+            } if(type.equals("exclusiveGateway")) {
                 List<PvmTransition> outgoingTransitions = ai.getOutgoingTransitions();
-                int i = 0;
+                RhoExpressionHolder expressionHolder = new RhoExpressionExclusiveHolder();
+
+//                int i = 0;
                 for (PvmTransition outgoingTransition : outgoingTransitions) {
                     TransitionImpl ti = (TransitionImpl) outgoingTransition;
                     Map<String, Object> tip = ti.getProperties();
@@ -60,24 +69,34 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
                     if(ct == null ||  !(ct instanceof UelExpressionCondition)) {
                         continue;
                     }
-                    RhoExpressionCondition rec = new RhoExpressionCondition(i==1);
-                    print(rec.getValue());
-                    tip.put("condition", rec);
-                    i++;
-
+                    RhoExpressionCondition rec = new RhoExpressionCondition();
+//                    print(rec.getValue());
+//                    tip.put("condition", rec);
+//                    i++;
+                    expressionHolder.addCondition(rec);
                 }
+
+                expressionManager.addExpressionHolder(expressionHolder);
+
             }
         }
 
 
-        Random random = new Random();
+//        Random random = new Random();
 
 //        for (int i = 0; i < 5; i++) {
-            int c = random.nextInt(2) + 1;
-            HashMap<String, Object> varMap = new HashMap<>();
-            varMap.put("chooice", c);
-            runtimeService.startProcessInstanceByKey("autoTaskProcess", varMap);
+//            int c = random.nextInt(2) + 1;
+//            HashMap<String, Object> varMap = new HashMap<>();
+//            varMap.put("chooice", c);
+//            runtimeService.startProcessInstanceByKey("autoTaskProcess", varMap);
 //        }
+
+        int debugMax = 10000;
+        int debugIdx = 0;
+        while(debugIdx < debugMax && !expressionManager.isFinish()) {
+            expressionManager.run();
+            runtimeService.startProcessInstanceByKey(testProcessDefinitionKeyName);
+        }
 
     }
 

@@ -12,10 +12,13 @@ public class RhoExpressionCondition implements Condition {
 
     @Override
     public boolean evaluate(DelegateExecution delegateExecution) {
-        System.out.println("evalute : " + this.value);
+//        System.out.println("evalute : " + this.value);
         return this.value;
     }
 
+    public RhoExpressionCondition() {
+
+    }
     public RhoExpressionCondition(boolean value) {
         this.value = value;
     }

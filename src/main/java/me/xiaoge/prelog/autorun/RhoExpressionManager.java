@@ -1,26 +1,37 @@
 package me.xiaoge.prelog.autorun;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
 /**
  * Created by abraham on 14/8/27.
  */
-public class RhoExpressionManager implements Iterator {
+public class RhoExpressionManager {
 
+    private Stack<RhoExpressionHolder> expressionHolderStack;
+    private List<RhoExpressionHolder> expressionHolderList;
+    private int idx;
 
-
-    @Override
-    public boolean hasNext() {
-        return false;
+    public RhoExpressionManager() {
+        expressionHolderList = new ArrayList<>();
+        expressionHolderStack = new Stack<>();
+        idx = 0;
     }
 
-    @Override
-    public Object next() {
-        return null;
+    public void addExpressionHolder(RhoExpressionHolder expressionHolder) {
+        expressionHolderList.add(expressionHolder);
     }
 
-    @Override
-    public void remove() {
-
+    public void run() {
+        idx = 0;
+        //todo
     }
+
+    public boolean isFinish() {
+        //todo
+        return true;
+    }
+
 }
