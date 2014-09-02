@@ -57,8 +57,6 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
             } if(type.equals("exclusiveGateway")) {
                 List<PvmTransition> outgoingTransitions = ai.getOutgoingTransitions();
                 RhoExpressionHolder expressionHolder = new RhoExpressionExclusiveHolder();
-
-//                int i = 0;
                 for (PvmTransition outgoingTransition : outgoingTransitions) {
                     TransitionImpl ti = (TransitionImpl) outgoingTransition;
                     Map<String, Object> tip = ti.getProperties();
@@ -70,9 +68,6 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
                         continue;
                     }
                     RhoExpressionCondition rec = new RhoExpressionCondition();
-//                    print(rec.getValue());
-//                    tip.put("condition", rec);
-//                    i++;
                     expressionHolder.addCondition(rec);
                 }
 
@@ -81,23 +76,20 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
             }
         }
 
-
-//        Random random = new Random();
-
-//        for (int i = 0; i < 5; i++) {
-//            int c = random.nextInt(2) + 1;
-//            HashMap<String, Object> varMap = new HashMap<>();
-//            varMap.put("chooice", c);
-//            runtimeService.startProcessInstanceByKey("autoTaskProcess", varMap);
-//        }
-
+        /**
+         * debugMax和debugIdx是为了防止陷入死循环。
+         */
         int debugMax = 10000;
         int debugIdx = 0;
         while(debugIdx < debugMax && !expressionManager.isFinish()) {
             expressionManager.run();
             runtimeService.startProcessInstanceByKey(testProcessDefinitionKeyName);
+            debugIdx++;
         }
 
+        if(debugIdx == debugMax) {
+            throw new Exception("expression manager go into infinite loop");
+        }
     }
 
 }
