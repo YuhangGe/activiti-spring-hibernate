@@ -1,5 +1,9 @@
 package me.xiaoge.prelog;
 
+import me.xiaoge.prelog.autorun.RhoExpressionCondition;
+import me.xiaoge.prelog.autorun.RhoExpressionExclusiveHolder;
+import me.xiaoge.prelog.autorun.RhoExpressionHolder;
+import me.xiaoge.prelog.autorun.RhoExpressionManager;
 import org.junit.Test;
 
 import java.util.Random;
@@ -16,13 +20,27 @@ public class CommonTest {
     }
 
     @Test
-    public void test() {
-        Random rnd = new Random();
-        int c;
-        for(int i=0;i<100;i++) {
-            c = rnd.nextInt(2) + 1;
-            print(c);
-        }
+    public void test() throws Exception {
+        RhoExpressionHolder h1 = new RhoExpressionExclusiveHolder();
+        RhoExpressionHolder h2 = new RhoExpressionExclusiveHolder();
 
+        h1.addCondition(new RhoExpressionCondition());
+        h1.addCondition(new RhoExpressionCondition());
+
+        h2.addCondition(new RhoExpressionCondition());
+        h2.addCondition(new RhoExpressionCondition());
+        h2.addCondition(new RhoExpressionCondition());
+
+        RhoExpressionManager manager = new RhoExpressionManager();
+        manager.addExpressionHolder(h1);
+        manager.addExpressionHolder(h2);
+
+        int count = 0;
+        while(count<10 && !manager.isFinish()) {
+            manager.run();
+            manager.printTo(System.out);
+            count++;
+        }
+        System.out.println("count:" + count);
     }
 }

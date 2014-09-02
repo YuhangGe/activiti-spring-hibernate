@@ -28,6 +28,11 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
     RepositoryService repositoryService;
 
     @Test
+    public void testHolder() throws Exception {
+
+    }
+
+//    @Test
     public void test() throws Exception {
         String testProcessDefinitionKeyName = "autoTaskProcess";
 

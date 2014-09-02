@@ -12,6 +12,12 @@ public class RhoExpressionExclusiveHolder extends RhoExpressionHolder {
         idx = 0;
     }
 
+    @Override
+    public void first() {
+        reset();
+        next();
+    }
+
 
     @Override
     public void reset() {

@@ -19,6 +19,8 @@ public abstract class RhoExpressionHolder{
         conditionList.add(expressionCondition);
     }
 
+    public abstract void first();
+
     public abstract void reset();
 
     public abstract boolean hasNext();

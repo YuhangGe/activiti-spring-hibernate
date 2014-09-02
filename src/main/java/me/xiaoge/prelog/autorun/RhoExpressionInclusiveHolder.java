@@ -10,6 +10,11 @@ public class RhoExpressionInclusiveHolder extends RhoExpressionHolder {
     }
 
     @Override
+    public void first() {
+
+    }
+
+    @Override
     public void reset() {
 
     }
