@@ -183,7 +183,7 @@ public class RhoEventLogger implements ActivitiEventListener {
             } else if(!dir.isDirectory()) {
                 throw new IOException("RhoEventLogger: logFilePath is not a directory");
             }
-            println(dir.getAbsolutePath());
+//            println(dir.getAbsolutePath());
             bw = new BufferedWriter(new FileWriter(dir.getAbsolutePath() + "/" + processDefId + "." + logFileExtension, true));
             this.logFileWriterMap.put(processDefId, bw);
         } else {

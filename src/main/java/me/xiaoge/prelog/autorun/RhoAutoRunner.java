@@ -86,7 +86,7 @@ public class RhoAutoRunner {
 
             } else if(type.equals("parallelGateway")) {
                 System.out.println("parallelGateway to do .");
-                //todo
+                //todo 当前对于并发，还需要额外处理，使满足rho-complete的条件。non-swf.bpmn这个文件就不能被正确挖掘。
             }
         }
 
@@ -97,7 +97,7 @@ public class RhoAutoRunner {
         int debugIdx = 0;
         while(debugIdx < debugMax && !expressionManager.isFinish()) {
             expressionManager.run();
-            expressionManager.printTo(System.out);
+//            expressionManager.printTo(System.out);
             runtimeService.startProcessInstanceByKey(processDefinitionKeyName);
             debugIdx++;
         }

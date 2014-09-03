@@ -23,7 +23,7 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
 
     @Test
     public void test() throws Exception {
-        String testProcessDefinitionKeyName = "autoTaskProcess";
+        String testProcessDefinitionKeyName = "nonSWFProcess";
 
         RhoAutoRunner autoRunner = new RhoAutoRunner(repositoryService);
 
