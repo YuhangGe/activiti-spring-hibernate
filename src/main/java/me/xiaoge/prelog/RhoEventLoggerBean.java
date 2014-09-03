@@ -10,7 +10,10 @@ import org.springframework.beans.factory.InitializingBean;
  * Created by xiaoge on 2014/8/22.
  */
 public class RhoEventLoggerBean implements InitializingBean{
-    private String logFilePath = "";
+    private String logFilePath = "./";
+    private String logFileExtension = ".plog";
+    private boolean saveLogFile = false;
+
     private RuntimeService runtimeService;
 
 
@@ -38,6 +41,26 @@ public class RhoEventLoggerBean implements InitializingBean{
         this.runtimeService = runtimeService;
     }
 
+    public void setLogFileExtension(String logFileExtension) {
+        this.logFileExtension = logFileExtension;
+    }
+
+    public void setSaveLogFile(boolean saveLogFile) {
+        this.saveLogFile = saveLogFile;
+    }
+
+    public String getLogFileExtension() {
+        return logFileExtension;
+    }
+
+    public boolean isSaveLogFile() {
+        return saveLogFile;
+    }
+
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
     public RhoEventLoggerBean() {
 
     }
@@ -54,8 +77,11 @@ public class RhoEventLoggerBean implements InitializingBean{
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), this.sessionFactory, this.logFilePath);
+        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory);
+        databaseEventLogger.setLogFilePath(logFilePath);
+        databaseEventLogger.setLogFileExtension(logFileExtension);
+        databaseEventLogger.setSaveLogFile(saveLogFile);
         runtimeService.addEventListener(databaseEventLogger);
-        System.out.println("rho bean init");
+//        System.out.println("rho bean init");
     }
 }

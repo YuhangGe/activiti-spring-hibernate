@@ -2,9 +2,7 @@ package me.xiaoge.prelog.autorun;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * Created by abraham on 14/8/27.
@@ -26,50 +24,48 @@ public class RhoExpressionManager {
         expressionHolderList.add(expressionHolder);
     }
 
+    private void initHolder(int idx) {
+        for(int i = expressionHolderList.size()-1;i>=idx;i--) {
+            expressionHolderList.get(i).first();
+        }
+    }
     private void doRun() {
-//        int finish_idx = -1;
-//        for(int i=expressionHolderList.size()-1;i>=0;i--) {
-//            if(!expressionHolderList.get(i).hasNext()) {
-//                finish_idx = i;
-//                break;
-//            }
-//        }
-//
-//
-//        for(int i=finish_idx+1;i<expressionHolderList.size();i++) {
-//            expressionHolderList.get(i).first();
-//        }
-//
-//        for(int i=expressionHolderList.size()-1;i>=0;i--) {
-//            RhoExpressionHolder holder = expressionHolderList.get(i);
-//            if(!holder.hasNext()) {
-//                continue;
-//            }
-//            holder.next();
-//            break;
-//        }
+        int total_size = expressionHolderList.size();
+        for(int i= total_size - 1;i>=0;i--) {
+            RhoExpressionHolder holder = expressionHolderList.get(i);
+            if(holder.hasNext()) {
+                holder.next();
+                initHolder(i+1);
+                break;
+            }
+        }
+        finishCount = 0;
+        for(RhoExpressionHolder holder: expressionHolderList) {
+            if(!holder.hasNext()) {
+                finishCount++;
+            }
+        }
     }
 
-    public void run() {
+    public void run() throws Exception {
+        if(this.isFinish()) {
+            return;
+        }
         if(!running) {
             running = true;
             finishCount = 0;
-            for(RhoExpressionHolder holder : expressionHolderList) {
-                holder.reset();
-            }
+            initHolder(0);
+        } else {
+            doRun();
         }
-        doRun();
     }
     public void printTo(PrintStream ps) {
         List<StringBuilder> stringList = new ArrayList<>();
         for(RhoExpressionHolder holder: expressionHolderList) {
             for(int i=0;i<holder.conditionList.size();i++) {
-//                RhoExpressionCondition condition = holder.conditionList.get(i);
                 if(stringList.size()<i+1) {
                     stringList.add(new StringBuilder());
                 }
-//                StringBuilder sb = stringList.get(i);
-//                sb.append(condition.getValue()).append('\t');
             }
         }
         for(RhoExpressionHolder holder: expressionHolderList) {
@@ -91,6 +87,7 @@ public class RhoExpressionManager {
         }
         ps.println("---------");
     }
+
     public void stop() {
         running = false;
         finishCount = 0;
@@ -98,6 +95,10 @@ public class RhoExpressionManager {
 
     public boolean isFinish() {
         return finishCount == expressionHolderList.size();
+    }
+
+    public void reset() {
+        this.stop();
     }
 
 }

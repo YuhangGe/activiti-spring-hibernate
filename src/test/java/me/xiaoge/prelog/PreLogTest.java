@@ -26,7 +26,7 @@ public class PreLogTest extends AbstractPreLogTest {
 
         ProcessEngineImpl processEngine = (ProcessEngineImpl) ProcessEngines.getDefaultProcessEngine();
         ProcessEngineConfiguration processEngineConfiguration = processEngine.getProcessEngineConfiguration();
-        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory,  "d:\\rho-log.txt");
+        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory);
         runtimeService.addEventListener(databaseEventLogger);
 
         runtimeService.startProcessInstanceByKey("singleTaskProcess");

@@ -46,7 +46,9 @@ public class RhoEventLogger implements ActivitiEventListener {
     protected Clock clock;
     protected ObjectMapper objectMapper;
     protected String logFilePath = "";
-    protected BufferedWriter logFileWriter = null;
+    protected Map<String, BufferedWriter> logFileWriterMap = new HashMap<>();
+    protected String logFileExtension = "plog";
+    protected boolean saveLogFile = false;
 
     // Listeners for new events
     protected List<RhoEventLoggerListener> listeners;
@@ -67,9 +69,8 @@ public class RhoEventLogger implements ActivitiEventListener {
         this.objectMapper = new ObjectMapper();
     }
 
-    public RhoEventLogger(Clock clock, SessionFactory sessionFactory, String logFilePath) {
+    public RhoEventLogger(Clock clock, SessionFactory sessionFactory) {
         this(clock);
-        this.logFilePath = logFilePath;
         this.rhoEventInternalDAO = new RhoEventInternalDAOImpl(sessionFactory);
         this.rhoEventCaseDAO = new RhoEventCaseDAOImpl(sessionFactory);
         this.rhoEventLogDAO = new RhoEventLogDAOImpl(sessionFactory);
@@ -158,10 +159,11 @@ public class RhoEventLogger implements ActivitiEventListener {
             if(endProcessInstance) {
                 /**
                  * 如果processInstance已经结束，则删除中间表里面的数据，以节省空间。
+                 * 同时将日志存入日志文件。
                  */
-                rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
-                if(this.logFilePath != null && !this.logFilePath.isEmpty()) {
-                    storeLogToFile(caseId);
+                this.rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
+                if(this.saveLogFile) {
+                    storeLogToFile(caseId, activitiActivityEvent.getProcessDefinitionId());
                 }
             } else {
                 dealEvent(activitiActivityEvent, caseId);
@@ -172,12 +174,22 @@ public class RhoEventLogger implements ActivitiEventListener {
 
     }
 
-    protected void storeLogToFile(long caseId) throws IOException{
-        if(this.logFileWriter == null) {
-            this.logFileWriter = new BufferedWriter(new FileWriter(this.logFilePath, true));
+    protected void storeLogToFile(long caseId, String processDefId) throws IOException{
+        BufferedWriter bw;
+        if(!this.logFileWriterMap.containsKey(processDefId)) {
+            File dir = new File(this.logFilePath);
+            if(!dir.exists()) {
+                dir.mkdir();
+            } else if(!dir.isDirectory()) {
+                throw new IOException("RhoEventLogger: logFilePath is not a directory");
+            }
+            println(dir.getAbsolutePath());
+            bw = new BufferedWriter(new FileWriter(dir.getAbsolutePath() + "/" + processDefId + "." + logFileExtension, true));
+            this.logFileWriterMap.put(processDefId, bw);
+        } else {
+            bw = this.logFileWriterMap.get(processDefId);
         }
         List<RhoEventLogEntity> rhoEventLogList = rhoEventLogDAO.findByCaseId(caseId);
-//        println(caseId);
         StringBuilder sb = new StringBuilder();
         Boolean first = true;
         for(RhoEventLogEntity r : rhoEventLogList) {
@@ -189,12 +201,12 @@ public class RhoEventLogger implements ActivitiEventListener {
             sb.append('[').append(r.getPreTask()).append(']').append(r.getCurTask());
         }
         sb.append("\r\n");
-        logLine(sb.toString());
+        logLine(bw, sb.toString());
     }
 
-    protected synchronized void logLine(String line) throws IOException{
-        this.logFileWriter.write(line);
-        this.logFileWriter.flush();
+    protected synchronized void logLine(BufferedWriter bw, String line) throws IOException{
+        bw.append(line);
+        bw.flush();
     }
 
     protected void dealEvent(ActivitiActivityEvent activitiActivityEvent, long caseId) {
@@ -288,5 +300,28 @@ public class RhoEventLogger implements ActivitiEventListener {
         this.listeners = listeners;
     }
 
+    public String getLogFileExtension() {
+        return logFileExtension;
+    }
+
+    public void setLogFileExtension(String logFileExtension) {
+        this.logFileExtension = logFileExtension;
+    }
+
+    public String getLogFilePath() {
+        return logFilePath;
+    }
+
+    public void setLogFilePath(String logFilePath) {
+        this.logFilePath = logFilePath;
+    }
+
+    public boolean isSaveLogFile() {
+        return saveLogFile;
+    }
+
+    public void setSaveLogFile(boolean saveLogFile) {
+        this.saveLogFile = saveLogFile;
+    }
 }
 

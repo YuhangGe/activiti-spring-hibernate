@@ -26,12 +26,12 @@ public class RhoExpressionExclusiveHolder extends RhoExpressionHolder {
 
     @Override
     public boolean hasNext() {
-        return idx != conditionList.size() - 1;
+        return idx < conditionList.size();
     }
 
     @Override
     public void next() {
-        if(idx>=conditionList.size()-1) {
+        if(!this.hasNext()) {
             return;
         }
         /**

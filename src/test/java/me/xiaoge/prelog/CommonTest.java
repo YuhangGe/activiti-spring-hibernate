@@ -23,6 +23,12 @@ public class CommonTest {
     public void test() throws Exception {
         RhoExpressionHolder h1 = new RhoExpressionExclusiveHolder();
         RhoExpressionHolder h2 = new RhoExpressionExclusiveHolder();
+        RhoExpressionHolder h3 = new RhoExpressionExclusiveHolder();
+
+        h3.addCondition(new RhoExpressionCondition());
+        h3.addCondition(new RhoExpressionCondition());
+        h3.addCondition(new RhoExpressionCondition());
+        h3.addCondition(new RhoExpressionCondition());
 
         h1.addCondition(new RhoExpressionCondition());
         h1.addCondition(new RhoExpressionCondition());
@@ -32,11 +38,12 @@ public class CommonTest {
         h2.addCondition(new RhoExpressionCondition());
 
         RhoExpressionManager manager = new RhoExpressionManager();
+        manager.addExpressionHolder(h3);
         manager.addExpressionHolder(h1);
         manager.addExpressionHolder(h2);
 
         int count = 0;
-        while(count<10 && !manager.isFinish()) {
+        while(count<1000 && !manager.isFinish()) {
             manager.run();
             manager.printTo(System.out);
             count++;
