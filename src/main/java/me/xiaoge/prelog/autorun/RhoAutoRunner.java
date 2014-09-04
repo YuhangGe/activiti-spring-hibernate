@@ -1,22 +1,30 @@
 package me.xiaoge.prelog.autorun;
 
+import me.xiaoge.prelog.RhoEventListener;
+import me.xiaoge.prelog.RhoEventLogEntity;
+import me.xiaoge.prelog.RhoEventLogger;
+import me.xiaoge.prelog.RhoEventLoggerBean;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.impl.RepositoryServiceImpl;
 import org.activiti.engine.impl.el.UelExpressionCondition;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.activiti.engine.impl.pvm.PvmActivity;
 import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.pvm.process.TransitionImpl;
 import org.activiti.engine.repository.ProcessDefinition;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by abraham on 14/9/3.
  */
-public class RhoAutoRunner {
+public class RhoAutoRunner implements RhoEventListener {
+
+    RhoEventLoggerBean rhoEventLoggerBean;
 
     private RepositoryService repositoryService;
 
@@ -28,12 +36,10 @@ public class RhoAutoRunner {
         this.repositoryService = repositoryService;
     }
 
-    public RhoAutoRunner() {
-
-    }
-
-    public RhoAutoRunner(RepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
+    public RhoAutoRunner(RhoEventLoggerBean rhoEventLoggerBean) {
+        this.rhoEventLoggerBean = rhoEventLoggerBean;
+        this.rhoEventLoggerBean.addRhoListener(RhoEventLogger.BEFORE_STORE_LOG, this);
+        this.repositoryService = rhoEventLoggerBean.getRepositoryService();
     }
 
     public void runProcessByDefinitionKeyName(RuntimeService runtimeService, String processDefinitionKeyName) throws Exception {
@@ -87,6 +93,12 @@ public class RhoAutoRunner {
             } else if(type.equals("parallelGateway")) {
                 System.out.println("parallelGateway to do .");
                 //todo 当前对于并发，还需要额外处理，使满足rho-complete的条件。non-swf.bpmn这个文件就不能被正确挖掘。
+                List<PvmTransition> incomingTransitions = ai.getIncomingTransitions();
+                List<String> preTaskList = new ArrayList<>();
+                for(PvmTransition incomingTransition: incomingTransitions) {
+                    PvmActivity activity = incomingTransition.getSource();
+
+                }
             }
         }
 
@@ -105,5 +117,10 @@ public class RhoAutoRunner {
         if(debugIdx == debugMax) {
             throw new Exception("RhoAutoRunner: expression manager go into infinite loop");
         }
+    }
+
+    @Override
+    public void onBeforeStoreLog(List<RhoEventLogEntity> rhoEventLogEntityList, RhoEventLogger rhoEventLogger) {
+        System.out.println("before store log event");
     }
 }

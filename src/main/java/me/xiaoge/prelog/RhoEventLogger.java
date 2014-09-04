@@ -26,6 +26,7 @@ import java.util.*;
  */
 public class RhoEventLogger implements ActivitiEventListener {
 
+    public static final String BEFORE_STORE_LOG = "BEFORE_STORE_LOG";
 
     private static void println(String msg) {
         System.out.println(msg);
@@ -161,10 +162,10 @@ public class RhoEventLogger implements ActivitiEventListener {
                  * 如果processInstance已经结束，则删除中间表里面的数据，以节省空间。
                  * 同时将日志存入日志文件。
                  */
-                this.rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
                 if(this.saveLogFile) {
                     storeLogToFile(caseId, activitiActivityEvent.getProcessDefinitionId());
                 }
+                this.rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
             } else {
                 dealEvent(activitiActivityEvent, caseId);
             }
@@ -189,7 +190,13 @@ public class RhoEventLogger implements ActivitiEventListener {
         } else {
             bw = this.logFileWriterMap.get(processDefId);
         }
+
         List<RhoEventLogEntity> rhoEventLogList = rhoEventLogDAO.findByCaseId(caseId);
+        if(rhoListenerMap.containsKey(BEFORE_STORE_LOG)) {
+            for(RhoEventListener listener: rhoListenerMap.get(BEFORE_STORE_LOG)) {
+                listener.onBeforeStoreLog(rhoEventLogList, this);
+            }
+        }
         StringBuilder sb = new StringBuilder();
         Boolean first = true;
         for(RhoEventLogEntity r : rhoEventLogList) {
@@ -322,6 +329,18 @@ public class RhoEventLogger implements ActivitiEventListener {
 
     public void setSaveLogFile(boolean saveLogFile) {
         this.saveLogFile = saveLogFile;
+    }
+
+    private Map<String, List<RhoEventListener>> rhoListenerMap = new HashMap<>();
+    public void addRhoListener(String eventName, RhoEventListener listener) {
+        List<RhoEventListener> listenerList;
+        if(rhoListenerMap.containsKey(eventName)) {
+            listenerList = rhoListenerMap.get(eventName);
+        } else {
+            listenerList = new ArrayList<>();
+            rhoListenerMap.put(eventName, listenerList);
+        }
+        listenerList.add(listener);
     }
 }
 

@@ -1,9 +1,6 @@
 package me.xiaoge.prelog;
 
-import org.activiti.engine.ManagementService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import org.activiti.engine.*;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +15,8 @@ import java.util.List;
  */
 @ContextConfiguration("classpath:testContext.xml")
 public class AbstractPreLogTest  extends AbstractJUnit4SpringContextTests {
-
+    @Autowired
+    RhoEventLoggerBean rhoEventLoggerBean;
     @Autowired
     RuntimeService runtimeService;
     @Autowired

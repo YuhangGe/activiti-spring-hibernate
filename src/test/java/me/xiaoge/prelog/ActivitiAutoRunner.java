@@ -25,7 +25,7 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
     public void test() throws Exception {
         String testProcessDefinitionKeyName = "nonSWFProcess";
 
-        RhoAutoRunner autoRunner = new RhoAutoRunner(repositoryService);
+        RhoAutoRunner autoRunner = new RhoAutoRunner(rhoEventLoggerBean);
 
         autoRunner.runProcessByDefinitionKeyName(runtimeService, testProcessDefinitionKeyName);
     }

@@ -1,7 +1,9 @@
 package me.xiaoge.prelog;
 
 
+import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngineConfiguration;
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -15,8 +17,10 @@ public class RhoEventLoggerBean implements InitializingBean{
     private boolean saveLogFile = false;
 
     private RuntimeService runtimeService;
+    private RepositoryService repositoryService;
+    private ProcessEngine processEngine;
 
-
+    private RhoEventLogger rhoEventLogger;
     private SessionFactory sessionFactory;
 
     private ProcessEngineConfiguration processEngineConfiguration;
@@ -39,6 +43,30 @@ public class RhoEventLoggerBean implements InitializingBean{
 
     public void setRuntimeService(RuntimeService runtimeService) {
         this.runtimeService = runtimeService;
+    }
+
+    public RepositoryService getRepositoryService() {
+        return repositoryService;
+    }
+
+    public void setRepositoryService(RepositoryService repositoryService) {
+        this.repositoryService = repositoryService;
+    }
+
+    public ProcessEngine getProcessEngine() {
+        return processEngine;
+    }
+
+    public void setProcessEngine(ProcessEngine processEngine) {
+        this.processEngine = processEngine;
+    }
+
+    public RhoEventLogger getRhoEventLogger() {
+        return rhoEventLogger;
+    }
+
+    public void setRhoEventLogger(RhoEventLogger rhoEventLogger) {
+        this.rhoEventLogger = rhoEventLogger;
     }
 
     public void setLogFileExtension(String logFileExtension) {
@@ -77,11 +105,21 @@ public class RhoEventLoggerBean implements InitializingBean{
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        RhoEventLogger databaseEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory);
-        databaseEventLogger.setLogFilePath(logFilePath);
-        databaseEventLogger.setLogFileExtension(logFileExtension);
-        databaseEventLogger.setSaveLogFile(saveLogFile);
-        runtimeService.addEventListener(databaseEventLogger);
+        if(processEngine != null) {
+            runtimeService = processEngine.getRuntimeService();
+            repositoryService = processEngine.getRepositoryService();
+            processEngineConfiguration = processEngine.getProcessEngineConfiguration();
+        }
+
+        rhoEventLogger = new RhoEventLogger(processEngineConfiguration.getClock(), sessionFactory);
+        rhoEventLogger.setLogFilePath(logFilePath);
+        rhoEventLogger.setLogFileExtension(logFileExtension);
+        rhoEventLogger.setSaveLogFile(saveLogFile);
+        runtimeService.addEventListener(rhoEventLogger);
 //        System.out.println("rho bean init");
+    }
+
+    public void addRhoListener(String eventName, RhoEventListener listener) {
+        rhoEventLogger.addRhoListener(eventName, listener);
     }
 }

@@ -35,9 +35,8 @@
         <property name="saveLogFile" value="true"></property>
         <property name="logFilePath" value="log"></property>
         <property name="logFileExtension" value="plog"></property>
-        <property name="runtimeService" ref="runtimeService"></property>
+        <property name="processEngine" ref="processEngine"></property>
         <property name="sessionFactory" ref="mySessionFactory"></property>
-        <property name="processEngineConfiguration" ref="processEngineConfiguration"></property>
     </bean>
 
 	<tx:annotation-driven />
