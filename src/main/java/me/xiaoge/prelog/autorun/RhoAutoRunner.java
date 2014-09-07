@@ -366,7 +366,7 @@ public class RhoAutoRunner implements RhoEventListener {
     }
 
     private void dealSotredLogList(BufferedWriter bufferedWriter) throws IOException {
-        System.out.println("append more parallel.")
+        System.out.println("append more parallel.");
         for(String k : parallelCache.keySet()) {
             ParallelE pe = parallelCache.get(k);
             List<RhoEventLogEntity> rhoEventLogEntityList = pe.trace;
