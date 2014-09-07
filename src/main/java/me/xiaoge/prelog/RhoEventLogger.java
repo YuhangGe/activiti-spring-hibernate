@@ -235,7 +235,7 @@ public class RhoEventLogger implements ActivitiEventListener {
 
 //        println("acti impl：" + ai.getId());
         /*
-         * 取到已经排序的preTaskList
+         * 取到preTaskList
          */
         String[] preTaskList = getCacheSortedPreTasks(processDefId, ai);
         List<String> actualPreTaskList = new ArrayList<>();
@@ -341,6 +341,14 @@ public class RhoEventLogger implements ActivitiEventListener {
             rhoListenerMap.put(eventName, listenerList);
         }
         listenerList.add(listener);
+    }
+
+    public BufferedWriter getStoreWriterByProcessDefId(String processDefId) {
+        if(logFileWriterMap.containsKey(processDefId)) {
+            return logFileWriterMap.get(processDefId);
+        } else {
+            return null;
+        }
     }
 }
 

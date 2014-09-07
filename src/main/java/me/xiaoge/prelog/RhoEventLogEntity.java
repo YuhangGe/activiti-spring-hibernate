@@ -51,4 +51,9 @@ public class RhoEventLogEntity {
     public void setCurTask(String curTask) {
         this.curTask = curTask;
     }
+
+    @Override
+    public String toString() {
+        return "[" + this.preTask + "]" + this.curTask;
+    }
 }

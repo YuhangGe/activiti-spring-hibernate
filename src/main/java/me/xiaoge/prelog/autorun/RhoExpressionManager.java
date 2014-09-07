@@ -11,7 +11,7 @@ public class RhoExpressionManager {
 
     private List<RhoExpressionHolder> expressionHolderList;
     private boolean running = false;
-    private int finishCount = 0;
+    private int finishCount = -1;
 
     public RhoExpressionManager() {
         expressionHolderList = new ArrayList<>();
@@ -51,9 +51,13 @@ public class RhoExpressionManager {
         if(this.isFinish()) {
             return;
         }
+
         if(!running) {
             running = true;
             finishCount = 0;
+            if(expressionHolderList.size() == 0) {
+                return;
+            }
             initHolder(0);
         } else {
             doRun();
@@ -90,11 +94,11 @@ public class RhoExpressionManager {
 
     public void stop() {
         running = false;
-        finishCount = 0;
+        finishCount = -1;
     }
 
     public boolean isFinish() {
-        return finishCount == expressionHolderList.size();
+        return finishCount >= expressionHolderList.size();
     }
 
     public void reset() {
