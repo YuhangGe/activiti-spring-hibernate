@@ -165,7 +165,7 @@ public class RhoEventLogger implements ActivitiEventListener {
                 if(this.saveLogFile) {
                     storeLogToFile(caseId, activitiActivityEvent.getProcessDefinitionId());
                 }
-                this.rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
+//                this.rhoEventInternalDAO.deleteByProcessInstanceId(processInstanceId);
             } else {
                 dealEvent(activitiActivityEvent, caseId);
             }
@@ -243,7 +243,9 @@ public class RhoEventLogger implements ActivitiEventListener {
         if(preTaskList.length> 0) {
             List<RhoEventInternalEntity> rhoEventInternalList = rhoEventInternalDAO.findByP(processInstanceId, preTaskList);
             for (RhoEventInternalEntity re:rhoEventInternalList) {
-                actualPreTaskList.add(re.getTaskName());
+                if(!actualPreTaskList.contains(re.getTaskName())) {
+                    actualPreTaskList.add(re.getTaskName());
+                }
             }
         }
 
@@ -255,6 +257,7 @@ public class RhoEventLogger implements ActivitiEventListener {
         curRhoEntity.setProcessInstanceId(processInstanceId);
         curRhoEntity.setTaskDefId(ai.getId());
         curRhoEntity.setTaskName(activitiActivityEvent.getActivityName());
+        curRhoEntity.setExecutionId(activitiActivityEvent.getExecutionId());
         rhoEventInternalDAO.save(curRhoEntity);
     }
     protected void log(long caseId, List<String> preTaskList, String curTask) {

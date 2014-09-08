@@ -23,7 +23,7 @@ public class ActivitiAutoRunner extends AbstractPreLogTest {
 
     @Test
     public void test() throws Exception {
-        String testProcessDefinitionKeyName = "fourParallelProcess";
+        String testProcessDefinitionKeyName = "simpleLoopProcess";
 
         RhoAutoRunner autoRunner = new RhoAutoRunner(rhoEventLoggerBean);
 

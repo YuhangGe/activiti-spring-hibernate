@@ -29,4 +29,9 @@ public class RhoExpressionInclusiveHolder extends RhoExpressionHolder {
 
     }
 
+    @Override
+    public void loop() {
+
+    }
+
 }

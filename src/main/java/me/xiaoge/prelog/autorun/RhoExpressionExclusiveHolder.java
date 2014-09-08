@@ -6,7 +6,8 @@ package me.xiaoge.prelog.autorun;
 public class RhoExpressionExclusiveHolder extends RhoExpressionHolder {
 
     private int idx;
-
+    private int loopIdx;
+    private int loopCount;
     public RhoExpressionExclusiveHolder() {
         super();
         idx = 0;
@@ -41,7 +42,28 @@ public class RhoExpressionExclusiveHolder extends RhoExpressionHolder {
             condition.setValue(false);
         }
         conditionList.get(idx).setValue(true);
+        loopIdx = idx;
+        loopCount = 0;
         idx++;
+    }
+
+    @Override
+    public void loop() {
+        if(loopCount % conditionList.size() != 0) {
+            loopCount++;
+            return;
+        }
+        loopCount++;
+        for(RhoExpressionCondition condition: conditionList) {
+            condition.setLoopValue(false);
+        }
+        loopIdx++;
+        if(loopIdx == conditionList.size()) {
+            loopIdx = 0;
+        }
+        conditionList.get(loopIdx).setLoopValue(true);
+        System.out.println("loop");
+
     }
 
 }

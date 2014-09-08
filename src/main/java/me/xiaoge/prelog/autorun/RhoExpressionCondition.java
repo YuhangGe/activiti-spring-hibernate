@@ -9,23 +9,39 @@ import org.activiti.engine.impl.Condition;
 public class RhoExpressionCondition implements Condition {
 
     private boolean value = false;
+    private int loop = 0;
 
     @Override
     public boolean evaluate(DelegateExecution delegateExecution) {
 //        System.out.println("evalute : " + this.value);
+        if(this.loop == 0) {
+            this.loop++;
+        } else {
+            holder.loop();
+            this.loop++;
+        }
         return this.value;
     }
 
-    public RhoExpressionCondition() {
-
+    private RhoExpressionHolder holder;
+    public RhoExpressionCondition(RhoExpressionHolder holder) {
+        this.holder = holder;
     }
-    public RhoExpressionCondition(boolean value) {
+    public RhoExpressionCondition(RhoExpressionHolder holder, boolean value) {
+        this(holder);
         this.value = value;
     }
 
     public void setValue(boolean value) {
+        this.loop = 0;
         this.value = value;
     }
 
-    public boolean getValue() { return this.value; }
+    public void setLoopValue(boolean value) {
+        this.value = value;
+    }
+
+    public boolean getValue() throws Exception {
+        return this.value;
+    }
 }

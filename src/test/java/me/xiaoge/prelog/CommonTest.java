@@ -45,17 +45,17 @@ public class CommonTest {
         RhoExpressionHolder h2 = new RhoExpressionExclusiveHolder();
         RhoExpressionHolder h3 = new RhoExpressionExclusiveHolder();
 
-        h3.addCondition(new RhoExpressionCondition());
-        h3.addCondition(new RhoExpressionCondition());
-        h3.addCondition(new RhoExpressionCondition());
-        h3.addCondition(new RhoExpressionCondition());
+        h3.addCondition(new RhoExpressionCondition(h3));
+        h3.addCondition(new RhoExpressionCondition(h3));
+        h3.addCondition(new RhoExpressionCondition(h3));
+        h3.addCondition(new RhoExpressionCondition(h3));
 
-        h1.addCondition(new RhoExpressionCondition());
-        h1.addCondition(new RhoExpressionCondition());
+        h1.addCondition(new RhoExpressionCondition(h1));
+        h1.addCondition(new RhoExpressionCondition(h1));
 
-        h2.addCondition(new RhoExpressionCondition());
-        h2.addCondition(new RhoExpressionCondition());
-        h2.addCondition(new RhoExpressionCondition());
+        h2.addCondition(new RhoExpressionCondition(h2));
+        h2.addCondition(new RhoExpressionCondition(h2));
+        h2.addCondition(new RhoExpressionCondition(h2));
 
         RhoExpressionManager manager = new RhoExpressionManager();
         manager.addExpressionHolder(h3);

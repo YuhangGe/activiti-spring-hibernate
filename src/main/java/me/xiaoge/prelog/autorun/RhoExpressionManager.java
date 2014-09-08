@@ -63,7 +63,7 @@ public class RhoExpressionManager {
             doRun();
         }
     }
-    public void printTo(PrintStream ps) {
+    public void printTo(PrintStream ps) throws Exception {
         List<StringBuilder> stringList = new ArrayList<>();
         for(RhoExpressionHolder holder: expressionHolderList) {
             for(int i=0;i<holder.conditionList.size();i++) {

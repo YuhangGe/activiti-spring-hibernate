@@ -13,6 +13,7 @@ public class RhoEventInternalEntity {
     private String taskName;
     private String taskDefId;
     private String processInstanceId;
+    private String executionId;
 
     public void setId(long id) {
         this.id = id;
@@ -52,5 +53,12 @@ public class RhoEventInternalEntity {
         this.processInstanceId = processInstanceId;
     }
 
+    @Column(name = "execution_id")
+    public String getExecutionId() {
+        return executionId;
+    }
 
+    public void setExecutionId(String executionId) {
+        this.executionId = executionId;
+    }
 }

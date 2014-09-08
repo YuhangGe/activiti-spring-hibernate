@@ -180,6 +180,9 @@ public class RhoAutoRunner implements RhoEventListener {
 
         RhoExpressionManager expressionManager = new RhoExpressionManager();
 
+        //todo deal one-length-loop
+        //todo deal loop condition
+
         for (ActivityImpl ai : activityList) {
             Map<String, Object> proMap = ai.getProperties();
             if (proMap == null || !proMap.containsKey("type")) {
@@ -198,14 +201,7 @@ public class RhoAutoRunner implements RhoEventListener {
                 for (PvmTransition outgoingTransition : outgoingTransitions) {
                     TransitionImpl ti = (TransitionImpl) outgoingTransition;
                     Map<String, Object> tip = ti.getProperties();
-//                    if (tip == null || !tip.containsKey("condition")) {
-//                        continue;
-//                    }
-//                    Object ct = tip.get("condition");
-//                    if (ct == null || !(ct instanceof UelExpressionCondition)) {
-//                        continue;
-//                    }
-                    RhoExpressionCondition rec = new RhoExpressionCondition();
+                    RhoExpressionCondition rec = new RhoExpressionCondition(expressionHolder);
                     expressionHolder.addCondition(rec);
                     tip.put("condition", rec);
                 }
