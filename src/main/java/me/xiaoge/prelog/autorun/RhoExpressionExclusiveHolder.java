@@ -66,4 +66,17 @@ public class RhoExpressionExclusiveHolder extends RhoExpressionHolder {
 
     }
 
+    @Override
+    public void loopNext() {
+        loopCount = 0;
+    }
+
+    @Override
+    public void loopReset() {
+        for(RhoExpressionCondition condition: conditionList) {
+            condition.setValue(false);
+        }
+        conditionList.get(idx-1).setValue(true);
+    }
+
 }

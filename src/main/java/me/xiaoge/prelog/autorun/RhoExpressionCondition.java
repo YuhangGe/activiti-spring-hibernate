@@ -20,6 +20,9 @@ public class RhoExpressionCondition implements Condition {
             holder.loop();
             this.loop++;
         }
+        if(this.value) {
+            holder.loopNext();
+        }
         return this.value;
     }
 
@@ -42,6 +45,7 @@ public class RhoExpressionCondition implements Condition {
     }
 
     public boolean getValue() throws Exception {
+
         return this.value;
     }
 }

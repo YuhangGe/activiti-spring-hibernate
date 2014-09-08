@@ -55,7 +55,7 @@ public class RhoEventLogger implements ActivitiEventListener {
     protected List<RhoEventLoggerListener> listeners;
 
 
-    protected static HashMap<String, HashMap<String, String[]>> processPreTaskCache = new HashMap<>();
+    protected static HashMap<String, HashMap<String, PT>> processPreTaskCache = new HashMap<>();
 
     private RepositoryService repositoryService = null;
     private RuntimeService runtimeService = null;
@@ -78,22 +78,24 @@ public class RhoEventLogger implements ActivitiEventListener {
     }
 
 
-    private static void getActivityPreTasks(List<PvmTransition> pvmTransitionList, List<String> preTaskList) {
+    private static void getActivityPreTasks(List<PvmTransition> pvmTransitionList, List<String> preTaskList, String myId) {
         for(PvmTransition pvmTransition:pvmTransitionList) {
             PvmActivity pvmActivity = pvmTransition.getSource();
             String actType = (String)pvmActivity.getProperty("type");
             if(actType.endsWith("Task")) {
                 //userTask, seriviceTask, ...
-                preTaskList.add(pvmActivity.getId());
+                if(!pvmActivity.getId().equals(myId)) {
+                    preTaskList.add(pvmActivity.getId());
+                }
             } else if(actType.endsWith("Gateway")) {
                 //gateway
-                getActivityPreTasks(pvmActivity.getIncomingTransitions(), preTaskList);
+                getActivityPreTasks(pvmActivity.getIncomingTransitions(), preTaskList, myId);
             }
         }
     }
 
-    private synchronized static String[] getCacheSortedPreTasks(String processDefId, ActivityImpl ai) {
-        HashMap<String, String[]> tm;
+    private synchronized static PT getCacheSortedPreTasks(String processDefId, ActivityImpl ai) throws Exception {
+        HashMap<String, PT> tm;
         if(!processPreTaskCache.containsKey(processDefId)) {
             tm = new HashMap<>();
             processPreTaskCache.put(processDefId, tm);
@@ -102,20 +104,42 @@ public class RhoEventLogger implements ActivitiEventListener {
         }
 
         String taskDefId = ai.getId();
-        String[] preTaskList;
+        PT apt;
         if(!tm.containsKey(taskDefId)) {
+            apt = new PT();
             List<String> tmpPreTaskList = new ArrayList<>();
-            getActivityPreTasks(ai.getIncomingTransitions(), tmpPreTaskList);
-            preTaskList = new String[tmpPreTaskList.size()];
-            tmpPreTaskList.toArray(preTaskList);
+            List<PvmTransition> incomingTList = ai.getIncomingTransitions();
+            String myId = ai.getId();
+
+            getActivityPreTasks(incomingTList, tmpPreTaskList, myId);
+            apt.choice = false;
+//            if(incomingTList.size() != 1) {
+//                throw new Exception("RhoEventLogger: do not support such kind of process");
+//            }
+//            PvmActivity preTaskAct = incomingTList.get(0).getSource();
+//            String preTaskType = (String) preTaskAct.getProperty("type");
+//            if(preTaskType.endsWith("Task")) {
+//                tmpPreTaskList.add(preTaskAct.getId());
+//                apt.choice = false;
+//            } else if(preTaskType.equals("parallelGateway")) {
+//                getActivityPreTasks(preTaskAct.getIncomingTransitions(), tmpPreTaskList, myId);
+//                apt.choice = false;
+//            } else if(preTaskType.equals("exclusiveGateway")) {
+//                getActivityPreTasks(preTaskAct.getIncomingTransitions(), tmpPreTaskList, myId);
+//                apt.choice = true;
+//            } else {
+//                throw new Exception("RhoEventLogger: do not support such kind of process");
+//            }
+            apt.preTaskList = new String[tmpPreTaskList.size()];
+            tmpPreTaskList.toArray(apt.preTaskList);
 //            println("---pre task : " + taskDefId + " ---");
 //            println(preTaskList);
 
-            tm.put(taskDefId, preTaskList);
+            tm.put(taskDefId, apt);
         } else {
-            preTaskList = tm.get(taskDefId);
+            apt = tm.get(taskDefId);
         }
-        return preTaskList;
+        return apt;
     }
 
     @Override
@@ -129,13 +153,7 @@ public class RhoEventLogger implements ActivitiEventListener {
         Boolean endProcessInstance = false;
         if(activityType.equals("endEvent")) {
             endProcessInstance = true;
-        } else if(!(activityType.equals("userTask")
-                || activityType.equals("scriptTask")
-                || activityType.equals("mailTask")
-                || activityType.equals("serviceTask")
-                || activityType.equals("receiveTask")
-                || activityType.equals("businessRuleTask")
-        )) {
+        } else if(!activityType.endsWith("Task")) {
             return;
         }
 
@@ -212,11 +230,12 @@ public class RhoEventLogger implements ActivitiEventListener {
     }
 
     protected synchronized void logLine(BufferedWriter bw, String line) throws IOException{
+        println(line);
         bw.append(line);
         bw.flush();
     }
 
-    protected void dealEvent(ActivitiActivityEvent activitiActivityEvent, long caseId) {
+    protected void dealEvent(ActivitiActivityEvent activitiActivityEvent, long caseId) throws Exception {
         String processInstanceId = activitiActivityEvent.getProcessInstanceId();
 
         if(repositoryService == null) {
@@ -233,18 +252,22 @@ public class RhoEventLogger implements ActivitiEventListener {
 
         ActivityImpl ai = processDefinition.findActivity(activitiActivityEvent.getActivityId());
 
-//        println("acti impl：" + ai.getId());
+        println("acti impl：" + ai.getProperty("name"));
         /*
          * 取到preTaskList
          */
-        String[] preTaskList = getCacheSortedPreTasks(processDefId, ai);
+        PT apt = getCacheSortedPreTasks(processDefId, ai);
         List<String> actualPreTaskList = new ArrayList<>();
 
-        if(preTaskList.length> 0) {
-            List<RhoEventInternalEntity> rhoEventInternalList = rhoEventInternalDAO.findByP(processInstanceId, preTaskList);
-            for (RhoEventInternalEntity re:rhoEventInternalList) {
-                if(!actualPreTaskList.contains(re.getTaskName())) {
-                    actualPreTaskList.add(re.getTaskName());
+        if(apt.preTaskList.length> 0) {
+            List<RhoEventInternalEntity> rhoEventInternalList = rhoEventInternalDAO.findByP(processInstanceId, apt.preTaskList);
+            if(apt.choice && rhoEventInternalList.size()>0) {
+                actualPreTaskList.add(rhoEventInternalList.get(0).getTaskName());
+            } else if(!apt.choice) {
+                for (RhoEventInternalEntity re:rhoEventInternalList) {
+                    if(!actualPreTaskList.contains(re.getTaskName())) {
+                        actualPreTaskList.add(re.getTaskName());
+                    }
                 }
             }
         }
@@ -353,5 +376,10 @@ public class RhoEventLogger implements ActivitiEventListener {
             return null;
         }
     }
+}
+
+class PT {
+    public String[] preTaskList;
+    public boolean choice = false;
 }
 

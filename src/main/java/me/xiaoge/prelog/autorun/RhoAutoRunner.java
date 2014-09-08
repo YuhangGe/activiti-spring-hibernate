@@ -229,7 +229,7 @@ public class RhoAutoRunner implements RhoEventListener {
         if (debugIdx == debugMax) {
             throw new Exception("RhoAutoRunner: expression manager go into infinite loop");
         }
-
+        System.out.println("process run times: " + debugIdx);
         if(parallelCache.size() != 0) {
             BufferedWriter storeWriter = rhoEventLoggerBean.getRhoEventLogger().getStoreWriterByProcessDefId(processDefinition.getId());
             if (storeWriter == null) {

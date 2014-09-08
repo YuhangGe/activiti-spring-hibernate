@@ -41,6 +41,7 @@ public class RhoExpressionManager {
         }
         finishCount = 0;
         for(RhoExpressionHolder holder: expressionHolderList) {
+            holder.loopReset();
             if(!holder.hasNext()) {
                 finishCount++;
             }
@@ -60,6 +61,7 @@ public class RhoExpressionManager {
             }
             initHolder(0);
         } else {
+
             doRun();
         }
     }

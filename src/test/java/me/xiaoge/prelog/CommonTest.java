@@ -20,7 +20,6 @@ public class CommonTest {
         System.out.println(s);
     }
 
-    @Test
     public void t2() {
         Map<String, List<String>> tMap = new HashMap<>();
         List<String> tS = new ArrayList<>();
@@ -40,6 +39,7 @@ public class CommonTest {
         g1.add("fuck");
         print(StringUtils.join(g2, ","));
     }
+    @Test
     public void test() throws Exception {
         RhoExpressionHolder h1 = new RhoExpressionExclusiveHolder();
         RhoExpressionHolder h2 = new RhoExpressionExclusiveHolder();

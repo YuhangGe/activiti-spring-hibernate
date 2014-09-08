@@ -28,4 +28,8 @@ public abstract class RhoExpressionHolder{
     public abstract void next();
 
     public abstract void loop();
+
+    public abstract void loopNext();
+
+    public abstract void loopReset();
 }
