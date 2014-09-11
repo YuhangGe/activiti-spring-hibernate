@@ -31,13 +31,13 @@
 		</property>
 	</bean>
 
-    <bean id="rhoEventLoggerBean" class="me.xiaoge.prelog.RhoEventLoggerBean">
-        <property name="saveLogFile" value="true"></property>
-        <property name="logFilePath" value="log"></property>
-        <property name="logFileExtension" value="plog"></property>
-        <property name="processEngine" ref="processEngine"></property>
-        <property name="sessionFactory" ref="mySessionFactory"></property>
-    </bean>
+    <!--<bean id="rhoEventLoggerBean" class="me.xiaoge.prelog.RhoEventLoggerBean">-->
+        <!--<property name="saveLogFile" value="true"></property>-->
+        <!--<property name="logFilePath" value="log"></property>-->
+        <!--<property name="logFileExtension" value="plog"></property>-->
+        <!--<property name="processEngine" ref="processEngine"></property>-->
+        <!--<property name="sessionFactory" ref="mySessionFactory"></property>-->
+    <!--</bean>-->
 
 	<tx:annotation-driven />
 
